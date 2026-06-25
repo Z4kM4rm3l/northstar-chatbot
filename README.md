@@ -37,12 +37,12 @@ North Star is a customer support chatbot for an outdoor apparel and camping gear
 
 The chatbot uses a **two-layer intent detection system:**
 
-1. **Keyword matching** — fast, reliable detection for common phrases
-2. **Gemini LLM fallback** — handles ambiguous or varied phrasing
+1. **Gemini LLM first** — handles natural language and varied phrasing
+2. **Keyword matching fallback** — fires if Gemini is unavailable or uncertain
 
 This ensures robust handling of natural language variations like:
 - "Where is my order?" → order_tracking
-- "Track my package" → order_tracking  
+- "Track my package" → order_tracking
 - "Has my stuff shipped?" → order_tracking
 
 ---
@@ -50,23 +50,26 @@ This ensures robust handling of natural language variations like:
 ## Tech Stack
 
 - **Backend:** Python 3.11, Flask
-- **AI:** Google Gemini 1.5 Flash
+- **AI:** Google Gemini 2.0 Flash
 - **Frontend:** Vanilla HTML/CSS/JS
 - **Session Management:** Flask sessions (per-user conversation state)
 
 ---
 
 ## Project Structure
-
-```
 northstar-chatbot/
+
 ├── app.py              # Flask server & routes
+
 ├── chatbot.py          # Core chatbot logic, intent detection, flows
+
 ├── templates/
+
 │   └── index.html      # Chat UI
+
 ├── requirements.txt    # Dependencies
+
 └── README.md
-```
 
 ---
 
@@ -74,81 +77,77 @@ northstar-chatbot/
 
 ### Prerequisites
 - Python 3.9+
-- Google Gemini API key (free tier works)
+- Google Gemini API key
 
 ### Installation
 
-```bash
-# Clone or unzip the project
-cd northstar-chatbot
-
-# Install dependencies
+Clone or download the project, then install dependencies:
 pip install -r requirements.txt
 
 ### Set your Gemini API key
 
-**Windows (PowerShell):**
-```powershell
+Windows (PowerShell):
 $env:GEMINI_API_KEY="your_api_key_here"
-```
 
-**Mac/Linux (Terminal):**
-```bash
-export GEMINI_API_KEY="your_api_key_here"
-```
-
-**Windows (Command Prompt):**
-```cmd
+Windows (Command Prompt):
 set GEMINI_API_KEY=your_api_key_here
-```
+
+Mac/Linux (Terminal):
+export GEMINI_API_KEY="your_api_key_here"
 
 ### Run the app
 
-**Windows (PowerShell or Command Prompt):**
-```powershell
+Windows:
 python app.py
-```
 
-**Mac/Linux:**
-```bash
+Mac/Linux:
 python3 app.py
-```
 
 Then open your browser to: **http://localhost:5000**
-```
-
-### Access
-Open your browser to: **http://localhost:5000**
 
 ---
 
 ## Conversation Flow Design
-
-```
 User Message
-     │
-     ▼
-Awaiting State? (order number, follow-up)
-     │ Yes → Handle directly
-     │ No  ↓
-Intent Detection (keywords → Gemini fallback)
-     │
-     ├── order_tracking    → Ask for order # → Return mock status
-     ├── returns           → Return policy + link
-     ├── shipping          → Shipping options + times
-     ├── product_rec       → Gemini-powered clarifying Q + recommendation
-     ├── human_handoff     → Transfer message + context saved
-     └── unknown           → Friendly fallback + menu options
-```
+
+│
+
+▼
+
+Awaiting State? (order number, follow-up, recommendation)
+
+│ Yes → Handle directly
+
+│ No  ↓
+
+Intent Detection (Gemini first → keyword fallback)
+
+│
+
+├── order_tracking      → Ask for order # → Return mock status
+
+├── returns             → Return policy + link
+
+├── shipping            → Shipping options + times
+
+├── product_rec         → Gemini-powered clarifying Q + recommendation
+
+├── human_handoff       → Transfer message + context saved
+
+├── small_talk          → Warm response + redirect
+
+└── unknown             → Friendly fallback + menu options
 
 ---
 
 ## Key Design Decisions
 
 - **No database required** — session state held in memory, mock data hardcoded per spec
-- **Stateful conversations** — chatbot remembers context within a session (e.g. awaiting order number)
-- **Post-delivery follow-up** — order #333 (delivered) triggers a follow-up to check satisfaction
+- **Stateful conversations** — chatbot remembers context within a session
+- **Recommendation active state** — multi-turn gear recommendation flow with full context awareness
+- **Post-delivery follow-up** — order #333 triggers a satisfaction check with escalation path
 - **Graceful fallback** — unknown intents return a helpful menu rather than a dead end
+- **Human handoff escape** — users can request a live agent from any point in the conversation
 - **Quick reply buttons** — UI shortcuts for all 4 core use cases improve usability
 
 ---
@@ -160,4 +159,4 @@ Intent Detection (keywords → Gemini fallback)
 - `templates/index.html` — Frontend UI
 - `requirements.txt` — Dependencies
 - `README.md` — This file
-- `demo_video.mp4` — 2-3 minute walkthrough of all use cases
+- Demo video — 2-3 minute walkthrough of all use cases
