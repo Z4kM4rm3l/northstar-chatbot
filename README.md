@@ -84,7 +84,7 @@ northstar-chatbot/
 Clone or download the project, then install dependencies:
 pip install -r requirements.txt
 
-### Set your Gemini API key
+### - Set your Google Gemini API key (free tier from https://aistudio.google.com works)
 
 Windows (PowerShell):
 $env:GEMINI_API_KEY="your_api_key_here"
