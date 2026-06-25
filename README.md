@@ -85,12 +85,36 @@ cd northstar-chatbot
 # Install dependencies
 pip install -r requirements.txt
 
-# Set your Gemini API key
-export GEMINI_API_KEY=your_api_key_here   # Mac/Linux
-set GEMINI_API_KEY=your_api_key_here      # Windows
+### Set your Gemini API key
 
-# Run the app
+**Windows (PowerShell):**
+```powershell
+$env:GEMINI_API_KEY="your_api_key_here"
+```
+
+**Mac/Linux (Terminal):**
+```bash
+export GEMINI_API_KEY="your_api_key_here"
+```
+
+**Windows (Command Prompt):**
+```cmd
+set GEMINI_API_KEY=your_api_key_here
+```
+
+### Run the app
+
+**Windows (PowerShell or Command Prompt):**
+```powershell
 python app.py
+```
+
+**Mac/Linux:**
+```bash
+python3 app.py
+```
+
+Then open your browser to: **http://localhost:5000**
 ```
 
 ### Access
