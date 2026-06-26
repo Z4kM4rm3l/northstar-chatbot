@@ -121,6 +121,20 @@ class NorthStarChatbot:
         session = self.get_session(session_id)
 
         if session.get("state") == "human_handoff_active":
+            # Use intent detection to allow natural exit from handoff state
+            exit_intent = detect_intent(user_message)
+            if exit_intent in ["order_tracking", "returns", "shipping", "product_recommendation", "small_talk"] or \
+               any(word in user_message.lower() for word in ["exit", "main menu", "back", "cancel", "nevermind", "home"]):
+                session["state"] = "main"
+                return (
+                    "No problem! Taking you back to the main menu. 🏔️\n\n"
+                    "I can help you with:\n"
+                    "• 📦 Tracking your order\n"
+                    "• 🔄 Returns & exchanges\n"
+                    "• 🧭 Gear recommendations\n"
+                    "• 🚚 Shipping information\n\n"
+                    "What can I help you with today?"
+                )
             return "A live guide will be with you shortly. 🏕️ Your conversation history has been saved and shared with the agent."
 
         session["history"].append({"role": "user", "content": user_message})
@@ -199,7 +213,6 @@ class NorthStarChatbot:
         # 2b. RECOMMENDATION ACTIVE STATE
         # ==========================================
         if session.get("state") == "recommendation_active":
-            # Allow escape to human handoff from recommendation flow
             if any(word in msg_lower for word in ["human", "agent", "person", "talk to", "live agent", "representative"]):
                 session["state"] = "human_handoff_active"
                 return (
