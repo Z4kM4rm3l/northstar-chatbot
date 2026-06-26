@@ -3,7 +3,7 @@ import google.generativeai as genai
 
 # Configure Gemini
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 # Mock order data (Strictly as required by client)
 ORDER_DATA = {
