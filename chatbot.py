@@ -3,7 +3,7 @@ import google.generativeai as genai
 
 # Configure Gemini
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.0-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 # Mock order data (Strictly as required by client)
 ORDER_DATA = {
@@ -119,12 +119,17 @@ class NorthStarChatbot:
 
     def process_message(self, session_id: str, user_message: str) -> str:
         session = self.get_session(session_id)
+        msg_lower = user_message.lower().strip()
 
+        # ==========================================
+        # LIVE AGENT EXIT TRIGGER HANDLER
+        # ==========================================
         if session.get("state") == "human_handoff_active":
-            # Use intent detection to allow natural exit from handoff state
             exit_intent = detect_intent(user_message)
-            if exit_intent in ["order_tracking", "returns", "shipping", "product_recommendation", "small_talk"] or \
-               any(word in user_message.lower() for word in ["exit", "main menu", "back", "cancel", "nevermind", "home"]):
+            exit_phrases = ["exit", "main menu", "back", "cancel", "nevermind", "home", "quit"]
+
+            # Match strict menu exit phrases
+            if any(phrase in msg_lower for phrase in exit_phrases):
                 session["state"] = "main"
                 return (
                     "No problem! Taking you back to the main menu. 🏔️\n\n"
@@ -135,7 +140,14 @@ class NorthStarChatbot:
                     "• 🚚 Shipping information\n\n"
                     "What can I help you with today?"
                 )
-            return "A live guide will be with you shortly. 🏕️ Your conversation history has been saved and shared with the agent."
+
+            # Match natural navigational redirects — fall through to handle immediately
+            elif exit_intent in ["order_tracking", "returns", "shipping", "product_recommendation", "small_talk"]:
+                session["state"] = "main"
+                # Fall through — no return, let _handle_message process it directly
+
+            else:
+                return "A live guide will be with you shortly. 🏕️ Your conversation history has been saved. You can also type 'exit' at any time to return to the main menu."
 
         session["history"].append({"role": "user", "content": user_message})
         response = self._handle_message(session, user_message)
@@ -172,18 +184,24 @@ class NorthStarChatbot:
                 return f"I couldn't find order #{clean_num}. Please double-check your order number and try again."
 
         if session["awaiting"] == "post_delivery_followup":
-            session["awaiting"] = None
-            session["state"] = "main"
-            if any(word in msg_lower for word in ["no", "issue", "problem", "missing", "damaged", "wrong", "bad"]):
-                session["state"] = "human_handoff_active"
-                return (
-                    "Oh no, I'm sorry to hear that! Missing or damaged items is something we want to "
-                    "resolve for you right away. 😟\n\n"
-                    "🔄 **Transferring to Live Agent...**\n"
-                    "I'm connecting you with a team member now who can look into this personally and make it right. "
-                    "Your full conversation history has been saved and shared with them."
-                )
-            return "Awesome! So glad everything arrived safely. Let me know if you need any gear suggestions or have any other questions. Happy trails! 🌲"
+            # If user expresses a different strong intent, abort followup and route it
+            if intent in ["returns", "human_handoff", "shipping", "product_recommendation", "order_tracking"]:
+                session["awaiting"] = None
+                session["state"] = "main"
+                # Fall through to global intent routing below
+            else:
+                session["awaiting"] = None
+                session["state"] = "main"
+                if any(word in msg_lower for word in ["no", "issue", "problem", "missing", "damaged", "wrong", "bad", "return", "refund"]):
+                    session["state"] = "human_handoff_active"
+                    return (
+                        "Oh no, I'm sorry to hear that! Missing or damaged items is something we want to "
+                        "resolve for you right away. 😟\n\n"
+                        "🔄 **Transferring to Live Agent...**\n"
+                        "I'm connecting you with a team member now who can look into this personally and make it right. "
+                        "Your full conversation history has been saved and shared with them."
+                    )
+                return "Awesome! So glad everything arrived safely. Let me know if you need any gear suggestions or have any other questions. Happy trails! 🌲"
 
         if session["awaiting"] == "rec_q1":
             session["awaiting"] = "rec_q2"
